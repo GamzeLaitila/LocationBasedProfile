@@ -63,7 +63,7 @@ public class LocationService extends Service  {
     Notification notification;
     NotificationManager mNotificationManager;
     Intent intent;
-    
+
     int MAX_PROFILE_NO = 10;
     int activeProfileIndex = MAX_PROFILE_NO, previousProIndexForNotification = MAX_PROFILE_NO;
     double latFromService, lonFromService;
@@ -75,13 +75,6 @@ public class LocationService extends Service  {
         super.onCreate();
         firstTime = true;
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-
-        mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        assert mNotificationManager != null;
-        if (!mNotificationManager.isNotificationPolicyAccessGranted()){
-            Intent intentNotification = new Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
-            startActivity(intentNotification);
-        }
 
         locationCallback = new LocationCallback(){
             @Override
@@ -131,7 +124,6 @@ public class LocationService extends Service  {
     // Sends notification IF there is a change in the active profile
     private void updateNotification() {
         Notification notification = getNotification(activeProfileName);
-
         mNotificationManager.notify(1, notification);
     }
 

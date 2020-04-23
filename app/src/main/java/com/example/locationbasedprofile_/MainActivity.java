@@ -3,6 +3,7 @@ package com.example.locationbasedprofile_;
 import android.Manifest;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -54,7 +55,8 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
     ImageView settingsIcon;
     AudioManager audioManager;
     LocationBroadcastReceiver receiver;
-    View mView;
+    NotificationManager mNotificationManager;
+    View mView, mView2;
 
     private final int REQUEST_PERMISSION_PHONE_STATE = 1;
     int MAX_PROFILE_NO = 10;
@@ -124,8 +126,9 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
     // Comes up every time app is launched unless "Don't show again" is checked
     private void showStartDialog()
     {
-        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         mView = getLayoutInflater().inflate(R.layout.dialog_app_info, null);
+
         CheckBox checkBox = mView.findViewById(R.id.checkBox);
         builder.setTitle("App-information")
                 .setMessage("\nLocation Based Profile allows you to set specific sound levels automatically, " +
@@ -136,6 +139,7 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
+                        doNotDisturbPermission();
                     }
                 });
         AlertDialog dialog = builder.create();
@@ -157,6 +161,36 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         }else{
             dialog.show();
         }
+    }
+
+    private void doNotDisturbPermission() {
+        // Asks permission for Do Not Disturb access
+        mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        assert mNotificationManager != null;
+        if (!mNotificationManager.isNotificationPolicyAccessGranted()){
+
+            final AlertDialog.Builder builder2 = new AlertDialog.Builder(MainActivity.this);
+            mView2 = getLayoutInflater().inflate(R.layout.do_not_disturb_access, null);
+
+            builder2.setTitle("Do Not Disturb access")
+                    .setMessage("\nIn order to modify your device's sound level, this app " +
+                            "needs your permission to access Do Not Disturb settings.\n" +
+                            "\nPlease turn ON the permission for LocationBasedProfile app " +
+                            "after pressing the button GIVE PERMISSION below.")
+                    .setView(mView2)
+                    .setPositiveButton("GIVE PERMISSION", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+
+                            Intent intentNotification = new Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
+                            startActivity(intentNotification);
+                        }
+                    });
+            AlertDialog dialog2 = builder2.create();
+            dialog2.show();
+        }
+        //
     }
 
     // Sets conditions for AlertDialog (App-information)
