@@ -4,6 +4,9 @@
     package="com.example.locationbasedprofile_">
 
     <uses-permission
+        android:name="android.permission.ACCESS_NOTIFICATION_POLICY"
+        tools:remove="android:maxSdkVersion" />
+    <uses-permission
         android:name="android.permission.INTERNET"
         tools:remove="android:maxSdkVersion" />
     <uses-permission

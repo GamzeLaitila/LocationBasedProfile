@@ -11,6 +11,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.Gravity;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -78,7 +79,8 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
 
         String[] PERMISSIONS = {
                 Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                Manifest.permission.READ_EXTERNAL_STORAGE
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.ACCESS_NOTIFICATION_POLICY
         };
         ActivityCompat.requestPermissions(this, PERMISSIONS, REQUEST_PERMISSION_PHONE_STATE);
 
@@ -128,7 +130,7 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         builder.setTitle("App-information")
                 .setMessage("\nLocation Based Profile allows you to set specific sound levels automatically, " +
                         "depending on your current location.\n" +
-                        "\nStart creating profiles by pressing the + button.")
+                        "\nStart creating profiles by pressing Add Profile Button")
                 .setView(mView)
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
@@ -227,6 +229,7 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         bundle.putDoubleArray("PROFILE_LONGITUDES", profileLongitudes);
         bundle.putInt("NO_OF_PROFILES", currentNoOfProfiles);
         openProfileIntent.putExtras(bundle);
+        openProfileIntent.setAction(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
         startActivityForResult(openProfileIntent, 1);
     }
 

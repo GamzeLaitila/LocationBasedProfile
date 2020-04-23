@@ -54,11 +54,6 @@ import static com.example.locationbasedprofile_.App.CHANNEL_ID;
 
 public class LocationService extends Service  {
 
-    int MAX_PROFILE_NO = 10;
-    int activeProfileIndex = MAX_PROFILE_NO, previousProIndexForNotification = MAX_PROFILE_NO;
-    double latFromService, lonFromService;
-    double latBorderMinus, latBorderPlus, lonBorderMinus, lonBorderPlus;
-    boolean firstTime;
     String activeProfileName = "No active profile";
     String previousProNameForNotification = "No active profile";
     FusedLocationProviderClient fusedLocationProviderClient;
@@ -66,13 +61,28 @@ public class LocationService extends Service  {
     Location lastLocation;
     PendingIntent pendingIntent;
     Notification notification;
+    NotificationManager mNotificationManager;
     Intent intent;
+    
+    int MAX_PROFILE_NO = 10;
+    int activeProfileIndex = MAX_PROFILE_NO, previousProIndexForNotification = MAX_PROFILE_NO;
+    double latFromService, lonFromService;
+    double latBorderMinus, latBorderPlus, lonBorderMinus, lonBorderPlus;
+    boolean firstTime;
 
     @Override
     public void onCreate() {
         super.onCreate();
         firstTime = true;
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+
+        mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        assert mNotificationManager != null;
+        if (!mNotificationManager.isNotificationPolicyAccessGranted()){
+            Intent intentNotification = new Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
+            startActivity(intentNotification);
+        }
+
         locationCallback = new LocationCallback(){
             @Override
             public void onLocationResult(LocationResult locationResult) {
@@ -122,7 +132,6 @@ public class LocationService extends Service  {
     private void updateNotification() {
         Notification notification = getNotification(activeProfileName);
 
-        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mNotificationManager.notify(1, notification);
     }
 
