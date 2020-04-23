@@ -116,7 +116,6 @@ public class NewProfileActivity extends FragmentActivity implements OnMapReadyCa
 
         if (!isLocationEnabled()) {
             turnOnGPS();
-            getLastLocation(operation);
         }
 
         SupportMapFragment mapFragment;
@@ -254,7 +253,7 @@ public class NewProfileActivity extends FragmentActivity implements OnMapReadyCa
 
         builder3.setTitle("Turn on GPS/Location")
                 .setMessage("\nPlease turn on GPS from your settings after pressing the button TURN ON GPS below.\n" +
-                        "Otherwise app can not work as intended")
+                        "\nAfter that you can use \nMy Location button:")
                 .setView(mView3)
                 .setPositiveButton("TURN ON GPS", new DialogInterface.OnClickListener() {
                     @Override
