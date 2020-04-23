@@ -2,7 +2,9 @@ package com.example.locationbasedprofile_;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -10,6 +12,7 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
+import android.provider.Settings;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -55,7 +58,9 @@ public class NewProfileActivity extends FragmentActivity implements OnMapReadyCa
     SeekBar soundBar;
     EditText profileName;
     TextView sound, pageTitle;
-    LatLng mapPosition;
+    LatLng mapPosition, userLatLng;
+    View mView3;
+    AlertDialog dialog3;
 
     int MAX_PROFILE_NO = 10;
     int PERMISSION_ID = 44;
@@ -109,6 +114,11 @@ public class NewProfileActivity extends FragmentActivity implements OnMapReadyCa
             requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1000);
         }
 
+        if (!isLocationEnabled()) {
+            turnOnGPS();
+            getLastLocation(operation);
+        }
+
         SupportMapFragment mapFragment;
         mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -136,7 +146,7 @@ public class NewProfileActivity extends FragmentActivity implements OnMapReadyCa
         myLocationBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getLastLocation("MyLocation", 0, 0);
+                getLastLocation("MyLocation");
             }
         });
 
@@ -225,17 +235,42 @@ public class NewProfileActivity extends FragmentActivity implements OnMapReadyCa
         map = googleMap;
         Bundle bundle = getIntent().getExtras();
 
-        operation = bundle.getString("OPERATION");
-        receivedLatitude = bundle.getDouble("LATITUDE", 0);
-        receivedLongitude = bundle.getDouble("LONGITUDE", 0);
+        if(operation.equals("Add")){
+            receivedLatitude = 0.0;
+            receivedLongitude = 0.0;
+        }
+        if(operation.equals("Modify")) {
+            receivedLatitude = bundle.getDouble("LATITUDE", 0.0);
+            receivedLongitude = bundle.getDouble("LONGITUDE", 0.0);
+        }
 
         map.setOnCameraIdleListener(this);
+        getLastLocation(operation);
+    }
 
-        getLastLocation(operation, receivedLatitude, receivedLongitude);
+    private void turnOnGPS() {
+        final AlertDialog.Builder builder3 = new AlertDialog.Builder(NewProfileActivity.this);
+        mView3 = getLayoutInflater().inflate(R.layout.turn_on_gps, null);
+
+        builder3.setTitle("Turn on GPS/Location")
+                .setMessage("\nPlease turn on GPS from your settings after pressing the button TURN ON GPS below.\n" +
+                        "Otherwise app can not work as intended")
+                .setView(mView3)
+                .setPositiveButton("TURN ON GPS", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+
+                        Intent intentNotification = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                        startActivity(intentNotification);
+                    }
+                });
+        dialog3 = builder3.create();
+        dialog3.show();
     }
 
     @SuppressLint("MissingPermission")
-    private void getLastLocation(final String operationMap, final double receivedLatitude, final double receivedLongitude) {
+    private void getLastLocation(final String operationMap) {
         if (checkPermissions()) {
             if (isLocationEnabled()) {
                 mFusedLocationClient.getLastLocation()
@@ -245,19 +280,17 @@ public class NewProfileActivity extends FragmentActivity implements OnMapReadyCa
                                 if (lastLocation == null) {
                                     requestNewLocationData();
                                 } else {
-                                    if (operationMap.equals("Modify")) {
-                                        LatLng userLatLng_new = new LatLng(receivedLatitude, receivedLongitude);
-                                        moveCamera(userLatLng_new);
-                                    }
                                     if (operationMap.equals("Add") || operationMap.equals("MyLocation")) {
-                                        LatLng userLatLng = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
-                                        moveCamera(userLatLng);
+                                        receivedLatitude = lastLocation.getLatitude();
+                                        receivedLongitude = lastLocation.getLongitude();
                                     }
+                                    userLatLng = new LatLng(receivedLatitude, receivedLongitude);
+                                    moveCamera(userLatLng);
                                 }
                             }
                         });
             } else {
-                Toast.makeText(this, "Turn on location", Toast.LENGTH_LONG).show();
+                // Toast.makeText(this, "Turn on location", Toast.LENGTH_LONG).show();
             }
         } else {
             requestPermissions();
@@ -341,7 +374,7 @@ public class NewProfileActivity extends FragmentActivity implements OnMapReadyCa
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_ID) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                getLastLocation(operation, receivedLatitude, receivedLongitude);
+                getLastLocation(operation);
             }
         }
     }
@@ -350,7 +383,7 @@ public class NewProfileActivity extends FragmentActivity implements OnMapReadyCa
     public void onResume(){
         super.onResume();
         if (checkPermissions()) {
-            getLastLocation(operation, receivedLatitude, receivedLongitude);
+            getLastLocation(operation);
         }
     }
 }
