@@ -55,17 +55,15 @@ import static com.example.locationbasedprofile_.App.CHANNEL_ID;
 public class LocationService extends Service  {
 
     int MAX_PROFILE_NO = 10;
-    int PERMISSION_ID = 44;
     int activeProfileIndex = MAX_PROFILE_NO, previousProIndexForNotification = MAX_PROFILE_NO;
     double latFromService, lonFromService;
     double latBorderMinus, latBorderPlus, lonBorderMinus, lonBorderPlus;
-    boolean firstTime, locationFound = false;
+    boolean firstTime;
     String activeProfileName = "No active profile";
     String previousProNameForNotification = "No active profile";
     FusedLocationProviderClient fusedLocationProviderClient;
     LocationCallback locationCallback;
     Location lastLocation;
-    AudioManager audioManager;
     PendingIntent pendingIntent;
     Notification notification;
     Intent intent;
@@ -88,7 +86,6 @@ public class LocationService extends Service  {
         startForeground(1, getNotification(activeProfileName));
     }
 
-
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         requestNewLocationData();
@@ -99,9 +96,7 @@ public class LocationService extends Service  {
 
         LocationRequest locationRequest = new LocationRequest();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setInterval(2000);
-        //locationRequest.setFastestInterval(2000);
-        //locationRequest.setNumUpdates(1);
+        locationRequest.setInterval(2000); // Checks location every other second
 
         fusedLocationProviderClient.requestLocationUpdates(
                 locationRequest, locationCallback, Looper.myLooper()
@@ -123,6 +118,7 @@ public class LocationService extends Service  {
         return notification;
     }
 
+    // Sends notification IF there is a change in the active profile
     private void updateNotification() {
         Notification notification = getNotification(activeProfileName);
 
@@ -130,11 +126,11 @@ public class LocationService extends Service  {
         mNotificationManager.notify(1, notification);
     }
 
-
+    // If user is at a location where a profile is set to,
+    // broadcast is sent to the MainActivity and said profile is set as the active profile
     private void checkLocationResult(){
         if (lastLocation == null) {
             requestNewLocationData();
-            //Log.d("myLog: ", "Lat is : " + latFromService + ", Lon is: " + lonFromService);
         } else {
             latFromService = lastLocation.getLatitude();
             lonFromService = lastLocation.getLongitude();
@@ -142,8 +138,6 @@ public class LocationService extends Service  {
             intent = new Intent("ACT_LOC");
             if (isProfileFound()) {
                 intent.putExtra("PROFILE_POSITION_FROM_SERVICE", activeProfileIndex);
-                //intent.putExtra("LAT", latFromService);
-                //intent.putExtra("LON", lonFromService);
             }
             else {
                 intent.putExtra("PROFILE_POSITION_FROM_SERVICE", MAX_PROFILE_NO);
@@ -157,13 +151,11 @@ public class LocationService extends Service  {
         }
     }
 
+    // Checks if the phone is at a location that matches any of the profiles
     public boolean isProfileFound() {
         int lineNumber = 0;
         String FILENAME = "data.txt";
         Context context = getApplicationContext();
-
-
-        //Log.d("myLog: ", "Lat is : " + latFromService + ", Lon is: " + lonFromService);
 
         try {
             File file = new File(context.getExternalFilesDir(null).getAbsolutePath(), FILENAME);
@@ -174,13 +166,12 @@ public class LocationService extends Service  {
             String line = bufferedReader.readLine();
 
             while (line != null && lineNumber < MAX_PROFILE_NO) {
-
                 String[] eachLine = line.split(",");
 
-                latBorderMinus = Double.parseDouble(eachLine[1]) - 0.0003;
-                latBorderPlus = Double.parseDouble(eachLine[1]) + 0.0003;
-                lonBorderMinus = Double.parseDouble(eachLine[2]) - 0.00045;
-                lonBorderPlus = Double.parseDouble(eachLine[2]) + 0.00045;
+                latBorderMinus = Double.parseDouble(eachLine[1]) - 0.0004;
+                latBorderPlus = Double.parseDouble(eachLine[1]) + 0.0004;
+                lonBorderMinus = Double.parseDouble(eachLine[2]) - 0.0006;
+                lonBorderPlus = Double.parseDouble(eachLine[2]) + 0.0006;
 
                 if ((latBorderMinus < latFromService  && latFromService < latBorderPlus)
                         && (lonBorderMinus < lonFromService && lonFromService < lonBorderPlus) ){
@@ -188,7 +179,6 @@ public class LocationService extends Service  {
                     activeProfileName = eachLine[0];
                     return true;
                 }
-
                 lineNumber++;
                 line = bufferedReader.readLine();
             }

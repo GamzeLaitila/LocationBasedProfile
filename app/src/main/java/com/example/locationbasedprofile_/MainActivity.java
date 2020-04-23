@@ -49,7 +49,6 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuItemClickListener {
 
     Button btn_addNew;
-    //TextView createNewTextView;
     ListView profileList;
     ImageView settingsIcon;
     AudioManager audioManager;
@@ -62,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
     int profilePosition;
     double[] profileLatitudes = new double[MAX_PROFILE_NO];
     double[] profileLongitudes = new double[MAX_PROFILE_NO];
-    String isBackgroundServiceOn;
+    String toBeAddedProfileData;
     String toastMessage, activeProfileName;
     String[] profileNames = new String[MAX_PROFILE_NO];
     String[] modifiedProfileData = new String[4];
@@ -85,18 +84,15 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
 
         profileList = findViewById(R.id.profileList);
         audioManager = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
-        //createNewTextView = findViewById(R.id.createNewTextView);
 
         // Reads profile details from file and puts them in the ListView component
         // In this case, readFile is called with the purpose "initiate"
         readFile("initiate", 0);
 
-        // Add new profile button
         btn_addNew = findViewById(R.id.addNew);
 
         // Checks if MAX_PROFILE_NO is reached
-        // if not, starts New Profile activity
-
+        // if not, starts NewProfileActivity where profile details are asked from the user
         btn_addNew.setOnClickListener(new OnClickListener(){
 
             @Override
@@ -112,6 +108,7 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         });
 
         settingsIcon = profileList.findViewById(R.id.listView_images);
+
         profileList.setOnItemClickListener(new AdapterView.OnItemClickListener(){
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -160,7 +157,7 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         }
     }
 
-    // sets conditions for AlertDialog (App-information)
+    // Sets conditions for AlertDialog (App-information)
     private void storeDialogStatus(boolean isChecked){
         SharedPreferences preferences = getSharedPreferences("CheckItem", MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
@@ -168,7 +165,7 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         editor.apply();
     }
 
-    // sets conditions for AlertDialog (App-information)
+    // Sets conditions for AlertDialog (App-information)
     private boolean getDialogStatus(){
         SharedPreferences mSharedPreferences = getSharedPreferences("CheckItem", MODE_PRIVATE);
         return mSharedPreferences.getBoolean("item", false);
@@ -243,8 +240,9 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
     }
 
     // When a profile's "Modify" option is chosen,
-    // this method starts intent to NewProfileActivity, waits for results which is modified profile's specifications.
-    // Chosen profile's details are sent in the bundle so that NewProfileActivity can use them
+    // this method starts intent to NewProfileActivity, waits for results which is the modified profile's specifications.
+    // Chosen profile's details are sent in the bundle so that NewProfileActivity can put them to their places
+    // as a reference to the user
     private void modifyProfile(int profileIndex) {
         Intent openProfileIntent = new Intent(getApplicationContext(), NewProfileActivity.class);
         Bundle bundle = new Bundle();
@@ -260,7 +258,8 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
 
     // When a profile's "Delete" option is chosen,
     // said profile's index is sent to be handled and removed from the file.
-    // Contents of the file is then put back on the screen by readFile method
+    // Contents of the file (current profiles) is then put back on the screen by printProfiles() function
+    // via readFile() function
     private void deleteProfile(int profileIndex) {
         readFile("delete", profileIndex);
         writeFile("delete");
@@ -270,13 +269,16 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
     // Receives returned data from intents.
     // If intent was started with "adding new profile" purpose, data is received via requestCode:1
     // If intent was started with "modifying a profile" purpose, data is received via requestCode:2
-    // Final state of the profiles is put again on the screen by readFile method
+    // Final state of the profiles is put again on the screen by printProfiles() function
+    // via readFile() function
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         // result after adding profile
         if(requestCode == 1){
             if(resultCode == RESULT_OK){
+                toBeAddedProfileData = data.getStringExtra("TO_BE_ADDED_PROFILE_DATA");
+                writeFile("add");
                 readFile("add", 0);
             }
         }
@@ -290,8 +292,8 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         }
     }
 
-    // Receives data from Service, data being an index of a profile.
-    // If index is below MAX_PROFILE_NO, activates the profile which the index refers to
+    // Receives "data" from Service, "data" being an index of a profile.
+    // If index is below MAX_PROFILE_NO, it activates the profile which the index refers to
     public class LocationBroadcastReceiver extends BroadcastReceiver {
 
         @Override
@@ -306,8 +308,21 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         }
     }
 
+    // Checks if background service is on
+    public boolean isServiceRunning(Context c, Class<?> serviceClass) {
+        ActivityManager activityManager = (ActivityManager)c.getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningServiceInfo> services = activityManager.getRunningServices(Integer.MAX_VALUE);
+
+        for(ActivityManager.RunningServiceInfo runningServiceInfo : services){
+            if (runningServiceInfo.service.getClassName().equals(serviceClass.getName())){
+                return true;
+            }
+        }
+        return false;
+    }
+
     // Depending on the parameters it gets, this method reads profile details from the file
-    // and sends them to the method printProfiles() to be written on the screen.
+    // and sends them to the method printProfiles() to be written on the screen into ListView.
     // String -operation- can be "initiate", "add", "modify" or "delete".
     private void readFile(String operation, int index){
 
@@ -348,15 +363,9 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
                 line = bufferedReader.readLine();
             }
             if (operation != "delete")
-                printProfiles(operation, allLines, lineNumber);
+                printProfiles(allLines, lineNumber);
             else
                 currentNoOfProfiles = lineNumber;
-
-            /*if (currentNoOfProfiles != 0)
-                createNewTextView.setText(" ");
-            else
-                createNewTextView.setText("Create a\nprofile");
-             */
 
             // start background service when at least 1 profile exists
             if (!isServiceRunning(getApplicationContext(), LocationService.class) && currentNoOfProfiles > 0) {
@@ -369,11 +378,6 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
                 stopService(new Intent(this, LocationService.class));
             }
 
-            if(isServiceRunning(getApplicationContext(), LocationService.class))
-                isBackgroundServiceOn = "ON";
-            else
-                isBackgroundServiceOn = "OFF";
-
         } catch (FileNotFoundException e){
             e.printStackTrace();
         } catch (IOException e){
@@ -382,24 +386,22 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         }
     }
 
-    public boolean isServiceRunning(Context c, Class<?> serviceClass) {
-        ActivityManager activityManager = (ActivityManager)c.getSystemService(Context.ACTIVITY_SERVICE);
-        List<ActivityManager.RunningServiceInfo> services = activityManager.getRunningServices(Integer.MAX_VALUE);
-
-        for(ActivityManager.RunningServiceInfo runningServiceInfo : services){
-            if (runningServiceInfo.service.getClassName().equals(serviceClass.getName())){
-                return true;
-            }
-        }
-        return false;
-    }
-
+    // Writes to file current profile's states depending on the parameters it gets.
+    // This function is used to either add, modify or delete a profile
     private void writeFile(String operation) {
         String FILENAME = "data.txt";
         Context context = getApplicationContext();
         BufferedWriter bufferedWriter = null;
-        String line;
-        toastMessage = operation;
+        String line = "";
+
+        switch (operation){
+            case "add": toastMessage = "added";
+                break;
+            case "modify": toastMessage = "modified";
+                break;
+            case "delete": toastMessage = "deleted";
+                break;
+        }
 
         try {
             File file = new File(context.getExternalFilesDir(null).getAbsolutePath(), FILENAME);
@@ -408,24 +410,37 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
                 FileWriter fileWriter_clear = new FileWriter(file, false);
                 bufferedWriter = new BufferedWriter(fileWriter_clear);
                 bufferedWriter.write("");
+
+                FileWriter fileWriter_writeOver = new FileWriter(file, true);
+                bufferedWriter = new BufferedWriter(fileWriter_writeOver);
             }
 
-            FileWriter fileWriter_writeOver = new FileWriter(file, true);
-            bufferedWriter = new BufferedWriter(fileWriter_writeOver);
+            if(operation == "add"){
+                FileWriter fileWriter = new FileWriter(file, true);
+                bufferedWriter = new BufferedWriter(fileWriter);
+            }
 
-            if(operation == "modify"){
-                for (int i = 0; i < 4; i++) {
-                    allLines[profilePosition][i] = modifiedProfileData[i];
+            if(operation == "delete" || operation == "modify"){
+                if (operation == "modify") {
+                    for (int i = 0; i < 4; i++) {
+                        allLines[profilePosition][i] = modifiedProfileData[i];
+                    }
+                }
+                for (int i = 0; i < currentNoOfProfiles; i++) {
+                    line = allLines[i][0] + "," + allLines[i][1] + "," + allLines[i][2] + "," + allLines[i][3];
+                    bufferedWriter.write(line);
+                    bufferedWriter.newLine();
+                    bufferedWriter.flush();
                 }
             }
-            for (int i = 0; i < currentNoOfProfiles; i++) {
-                line = allLines[i][0] + "," + allLines[i][1] + "," + allLines[i][2] + "," + allLines[i][3];
+            if(operation == "add"){
+                line = toBeAddedProfileData;
                 bufferedWriter.write(line);
                 bufferedWriter.newLine();
                 bufferedWriter.flush();
             }
-            if(operation.equals("delete"))
-                Toast.makeText(this, "Profile " + toastMessage + "d", Toast.LENGTH_SHORT).show();
+
+            Toast.makeText(this, "Profile " + toastMessage, Toast.LENGTH_SHORT).show();
 
         } catch (FileNotFoundException e){
             e.printStackTrace();
@@ -441,7 +456,9 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
         }
     }
 
-    private void printProfiles(String operation, String[][] allLines, int noOfProfiles) {
+    // Actually prints each profile's details that it reads from file
+    // Sets these profile details into the ListView
+    private void printProfiles(String[][] allLines, int noOfProfiles) {
 
         currentNoOfProfiles = noOfProfiles;
         List<HashMap<String, String>> list = new ArrayList<>();
@@ -481,17 +498,10 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
             list.add(hm);
         }
 
-        //String[] from = {"ProfileName", "SoundLevelText", "SoundLevelIcon", "SettingsIcon"};
-        //int[] to = {R.id.profileName, R.id.soundLevel, R.id.soundLevel_images, R.id.listView_images};
-
         String[] from = {"ProfileName", "SoundLevelIcon", "SettingsIcon"};
         int[] to = {R.id.profileName, R.id.soundLevel_images, R.id.listView_images};
 
         SimpleAdapter simpleAdapter = new SimpleAdapter(getBaseContext(), list, R.layout.listview_items, from, to);
-
         profileList.setAdapter(simpleAdapter);
-        if(operation.equals("modify")){
-            Toast.makeText(this, "Profile modified", Toast.LENGTH_SHORT).show();
-        }
     }
 }

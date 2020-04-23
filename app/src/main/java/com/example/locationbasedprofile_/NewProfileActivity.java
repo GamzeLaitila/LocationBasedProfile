@@ -64,7 +64,7 @@ public class NewProfileActivity extends FragmentActivity implements OnMapReadyCa
     double receivedLatitude, receivedLongitude;
     double[] receivedLatitudes = new double[MAX_PROFILE_NO];
     double[] receivedLongitudes = new double[MAX_PROFILE_NO];
-    String operation, sentProfileName, profileData, receivedProfileName, line;
+    String operation, sentProfileName, toBeAddedProfileData, receivedProfileName, line;
     String[] receivedProfileNames = new String[MAX_PROFILE_NO];
     String[] modifiedProfileData = new String[4];
 
@@ -81,11 +81,13 @@ public class NewProfileActivity extends FragmentActivity implements OnMapReadyCa
 
         Bundle bundle = getIntent().getExtras();
 
+        // Parameters that are sent from the MainActivity are received
+        // in order to be used in queries
         if(bundle != null) {
 
             operation = bundle.getString("OPERATION");
 
-            // from modify profile
+            // from "modify profile"
             pageTitle.setText(operation + " Profile");
             manageProfileBtn.setText(operation);
 
@@ -93,12 +95,10 @@ public class NewProfileActivity extends FragmentActivity implements OnMapReadyCa
             receivedProfileName = bundle.getString("PROFILE_NAME");
             profileName.setText(receivedProfileName);
             //----LATITUDE and LONGITUDE are received in onMapReady method
-            //receivedLatitude = bundle.getDouble("LATITUDE");
-            //receivedLongitude = bundle.getDouble("LONGITUDE");
             receivedSoundLevel = bundle.getInt("SOUND_LEVEL", 3);
             currentSoundLevel = receivedSoundLevel;
 
-            // from add new profile
+            // from "add new profile"
             receivedProfileNames = bundle.getStringArray("PROFILE_NAMES");
             receivedLatitudes = bundle.getDoubleArray("PROFILE_LATITUDES");
             receivedLongitudes = bundle.getDoubleArray("PROFILE_LONGITUDES");
@@ -147,7 +147,6 @@ public class NewProfileActivity extends FragmentActivity implements OnMapReadyCa
                 int isSameProfileName = 0;
                 int isSameLocation = 0;
 
-                //replace("\"", "")
                 String profileNameWithoutComma = profileName.getText().toString().replace(",", "");
 
                 if(operation.equals("Add")) {
@@ -160,10 +159,10 @@ public class NewProfileActivity extends FragmentActivity implements OnMapReadyCa
                                 isSameProfileName = 1;
                                 break;
                             }
-                            if ((receivedLatitudes[i] < currentLocation.target.latitude + 0.0003
-                                && receivedLatitudes[i] > currentLocation.target.latitude - 0.0003)
-                                && (receivedLongitudes[i] < currentLocation.target.longitude + 0.00045
-                                && receivedLongitudes[i] > currentLocation.target.longitude - 0.00045)) {
+                            if ((receivedLatitudes[i] < currentLocation.target.latitude + 0.0004
+                                && receivedLatitudes[i] > currentLocation.target.latitude - 0.0004)
+                                && (receivedLongitudes[i] < currentLocation.target.longitude + 0.0006
+                                && receivedLongitudes[i] > currentLocation.target.longitude - 0.0006)) {
                                     isSameLocation = 1;
                             }
                         }
@@ -188,9 +187,10 @@ public class NewProfileActivity extends FragmentActivity implements OnMapReadyCa
         });
     }
 
+    // Adds user's inputs to the bundle and sends them back to the MainActivity to be handled
     public void modifyProfile() {
         profileName = findViewById(R.id.profileName_EditText);
-        sentProfileName = profileName.getText().toString().replace(",", ""); //replace("\"", "")
+        sentProfileName = profileName.getText().toString().replace(",", "");
         String sentLatitude = String.format ("%.9f", currentLocation.target.latitude);
         String sentLongitude = String.format ("%.9f", currentLocation.target.longitude);
 
@@ -205,47 +205,19 @@ public class NewProfileActivity extends FragmentActivity implements OnMapReadyCa
         finish();
     }
 
+    // Adds user's inputs to the bundle and sends them back to the MainActivity to be handled
     public void addProfile() {
-        writeFile();
-        Intent mainIntent = new Intent(this, MainActivity.class);
-        setResult(RESULT_OK, mainIntent);
-        finish();
-    }
-
-    private void writeFile() {
         profileName = findViewById(R.id.profileName_EditText);
-        sentProfileName = profileName.getText().toString().replace(",", ""); //replace("\"", "")
+        sentProfileName = profileName.getText().toString().replace(",", "");
         String sentLatitude = String.format ("%.9f", currentLocation.target.latitude);
         String sentLongitude = String.format ("%.9f", currentLocation.target.longitude);
 
-        profileData = sentProfileName + "," + sentLatitude + "," + sentLongitude + "," + soundBar.getProgress();
+        toBeAddedProfileData = sentProfileName + "," + sentLatitude + "," + sentLongitude + "," + soundBar.getProgress();
 
-        String FILENAME = "data.txt";
-        Context context = getApplicationContext();
-        BufferedWriter bufferedWriter = null;
-
-        try {
-            File file = new File(context.getExternalFilesDir(null).getAbsolutePath(), FILENAME);
-            FileWriter fileWriter = new FileWriter(file, true);
-            bufferedWriter = new BufferedWriter(fileWriter);
-
-            bufferedWriter.write(profileData);
-            bufferedWriter.newLine();
-            bufferedWriter.flush();
-
-            Toast.makeText(this, "Profile added", Toast.LENGTH_SHORT).show();
-        } catch (FileNotFoundException e){
-            e.printStackTrace();
-            Toast.makeText(this, "File not found", Toast.LENGTH_SHORT).show();
-        } catch (IOException e){
-            e.printStackTrace();
-            Toast.makeText(this, "Error saving", Toast.LENGTH_SHORT).show();
-        } finally {
-            if (bufferedWriter != null) try {
-                bufferedWriter.close();
-            } catch (IOException ioe2) {
-            }
-        }
+        Intent mainIntent = new Intent(this, MainActivity.class);
+        mainIntent.putExtra("TO_BE_ADDED_PROFILE_DATA", toBeAddedProfileData);
+        setResult(RESULT_OK, mainIntent);
+        finish();
     }
 
     @Override
@@ -273,8 +245,6 @@ public class NewProfileActivity extends FragmentActivity implements OnMapReadyCa
                                 if (lastLocation == null) {
                                     requestNewLocationData();
                                 } else {
-                                    //map.clear(); // clear old location marker in google map
-
                                     if (operationMap.equals("Modify")) {
                                         LatLng userLatLng_new = new LatLng(receivedLatitude, receivedLongitude);
                                         moveCamera(userLatLng_new);
@@ -292,18 +262,15 @@ public class NewProfileActivity extends FragmentActivity implements OnMapReadyCa
         } else {
             requestPermissions();
         }
-        // getting user last location to set the default location marker on the map
-        //lastLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        //locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
     }
 
     public void moveCamera(LatLng userLatLng){
         mapPosition = userLatLng;
         if(operation.equals("MyLocation"))
-            map.moveCamera(CameraUpdateFactory.newLatLngZoom(mapPosition, 11)); //current zoom level, if user has already changed it?
+            // modify later - current zoom level, if user has already changed it?
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(mapPosition, 11));
         else
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(mapPosition, 11));
-        //map.addMarker(new MarkerOptions().position(mapPosition).title(""));
     }
 
     @SuppressLint("MissingPermission")
@@ -328,8 +295,6 @@ public class NewProfileActivity extends FragmentActivity implements OnMapReadyCa
         public void onLocationResult(LocationResult locationResult) {
             Location mLastLocation = locationResult.getLastLocation();
             mapPosition = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-            // latTextView.setText(mLastLocation.getLatitude()+"");
-            // lonTextView.setText(mLastLocation.getLongitude()+"");
         }
     };
 
@@ -358,21 +323,17 @@ public class NewProfileActivity extends FragmentActivity implements OnMapReadyCa
 
     @Override
     public void onCameraMoveStarted(int i) {
-
     }
 
     @Override
     public void onCameraIdle() {
         currentLocation = map.getCameraPosition();
 
-        TextView locationText = findViewById(R.id.locationTextView);
         double latitude = currentLocation.target.latitude;
         double longitude = currentLocation.target.longitude;
         mapPosition = new LatLng(latitude, longitude);
         map.clear();
         map.addMarker(new MarkerOptions().position(mapPosition).title(""));
-
-        //locationText.setText("Location: " + latitude + ", " + longitude);
     }
 
     @Override
@@ -391,6 +352,5 @@ public class NewProfileActivity extends FragmentActivity implements OnMapReadyCa
         if (checkPermissions()) {
             getLastLocation(operation, receivedLatitude, receivedLongitude);
         }
-
     }
 }
