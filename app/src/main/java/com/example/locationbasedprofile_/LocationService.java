@@ -113,6 +113,7 @@ public class LocationService extends Service  {
                 .setContentTitle("Active sound profile:")
                 .setContentText(activeProfileName_ + "")
                 .setSmallIcon(R.drawable.app_icon)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setContentIntent(pendingIntent).build();
 
         previousProIndexForNotification = activeProfileIndex;

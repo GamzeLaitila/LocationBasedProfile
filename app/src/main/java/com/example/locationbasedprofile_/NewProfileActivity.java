@@ -158,40 +158,43 @@ public class NewProfileActivity extends FragmentActivity implements OnMapReadyCa
 
                 String profileNameWithoutComma = profileName.getText().toString().replace(",", "");
 
-                if(operation.equals("Add")) {
-                    if (receivedNoOfProfiles != 0) {
-                        // check if profile already exists with the provided name
-                        // OR
-                        // the ~chosen location
-                        for (int i = 0; i < receivedNoOfProfiles; i++) {
-                            if (receivedProfileNames[i].equals(profileNameWithoutComma)) {
-                                isSameProfileName = 1;
-                                break;
-                            }
-                            if ((receivedLatitudes[i] < currentLocation.target.latitude + 0.0004
-                                && receivedLatitudes[i] > currentLocation.target.latitude - 0.0004)
-                                && (receivedLongitudes[i] < currentLocation.target.longitude + 0.0006
-                                && receivedLongitudes[i] > currentLocation.target.longitude - 0.0006)) {
+                if(profileNameWithoutComma.trim().length() > 0) {
+                    if (operation.equals("Add")) {
+                        if (receivedNoOfProfiles != 0) {
+                            // check if profile already exists with the provided name
+                            // OR
+                            // the ~chosen location
+                            for (int i = 0; i < receivedNoOfProfiles; i++) {
+                                if (receivedProfileNames[i].equals(profileNameWithoutComma)) {
+                                    isSameProfileName = 1;
+                                    break;
+                                }
+                                if ((receivedLatitudes[i] < currentLocation.target.latitude + 0.0004
+                                        && receivedLatitudes[i] > currentLocation.target.latitude - 0.0004)
+                                        && (receivedLongitudes[i] < currentLocation.target.longitude + 0.0006
+                                        && receivedLongitudes[i] > currentLocation.target.longitude - 0.0006)) {
                                     isSameLocation = 1;
+                                }
                             }
-                        }
-                        if (isSameLocation == 0 && isSameProfileName == 0 && !profileNameWithoutComma.equals("")) {
-                            addProfile();
+                            if (isSameLocation == 0 && isSameProfileName == 0 && !profileNameWithoutComma.equals("")) {
+                                addProfile();
+                            } else {
+                                if (isSameLocation != 0)
+                                    Toast.makeText(NewProfileActivity.this, "A profile with approximately same location already exists", Toast.LENGTH_LONG).show();
+                                if (profileNameWithoutComma.equals(""))
+                                    Toast.makeText(NewProfileActivity.this, "Enter a profile name", Toast.LENGTH_LONG).show();
+                                if (isSameProfileName != 0)
+                                    Toast.makeText(NewProfileActivity.this, "A profile with the same name already exists", Toast.LENGTH_LONG).show();
+                            }
                         } else {
-                            if(isSameLocation != 0)
-                                Toast.makeText(NewProfileActivity.this, "A profile with approximately same location already exists", Toast.LENGTH_LONG).show();
-                            if(profileNameWithoutComma.equals(""))
-                                Toast.makeText(NewProfileActivity.this, "Enter a profile name", Toast.LENGTH_LONG).show();
-                            if(isSameProfileName != 0)
-                                Toast.makeText(NewProfileActivity.this, "A profile with the same name already exists", Toast.LENGTH_LONG).show();
+                            addProfile();
                         }
                     } else {
-                        addProfile();
+                        modifyProfile();
                     }
                 }
-                else {
-                    modifyProfile();
-                }
+                else
+                    Toast.makeText(NewProfileActivity.this, "Please make sure to type a valid profile name", Toast.LENGTH_LONG).show();
             }
         });
     }
