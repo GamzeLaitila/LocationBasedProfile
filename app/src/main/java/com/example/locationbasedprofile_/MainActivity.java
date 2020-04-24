@@ -230,7 +230,7 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
                 return true;
             case R.id.delete_item:
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setMessage("Are you sure you want to delete the profile?").setCancelable(false)
+                builder.setMessage("Are you sure you want to delete " + allLines[profilePosition][0] + " profile?").setCancelable(false)
                         .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {

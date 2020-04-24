@@ -16,19 +16,6 @@
 
     </ListView>
 
-    <!--<TextView
-        android:id="@+id/createNewTextView"
-        android:layout_width="100sp"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="15sp"
-        android:maxLines="100"
-        android:singleLine="false"
-        android:text="Create a\nprofile"
-        android:textAlignment="center"
-        android:textSize="18sp"
-        app:layout_constraintBottom_toTopOf="@+id/addNew"
-        app:layout_constraintEnd_toEndOf="parent" />-->
-
     <FrameLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -54,7 +41,7 @@
             android:gravity="center"
             android:translationZ="180dp"
             android:paddingStart="28sp"
-            android:text="Add Profile"
+            android:text="@string/add_profile_button"
             android:textColor="@android:color/white"
             android:textSize="24sp"
             android:textStyle="bold"/>

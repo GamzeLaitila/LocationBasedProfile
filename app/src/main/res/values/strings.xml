@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">LocationBasedProfile</string>
+    <string name="add_profile_button">Add Profile</string>
+    <string name="location_text">Location</string>
+    <string name="sound_level_text">Sound level: </string>
+    <string name="new_profile_text">New Profile</string>
+    <string name="profile_name_text">Profile Name: </string>
+    <string name="checkbox_text">Don\'t show this message again</string>
 </resources>
