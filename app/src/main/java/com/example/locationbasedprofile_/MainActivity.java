@@ -220,10 +220,6 @@ public class MainActivity extends AppCompatActivity implements PopupMenu.OnMenuI
     @Override
     public boolean onMenuItemClick(MenuItem item) {
         switch(item.getItemId()){
-            case R.id.activate_item:
-                activateProfile(profilePosition);
-                //Toast.makeText(this, "Activate selected", Toast.LENGTH_SHORT).show();
-                return true;
             case R.id.modify_item:
                 modifyProfile(profilePosition);
                 //Toast.makeText(this, "Modify selected", Toast.LENGTH_SHORT).show();

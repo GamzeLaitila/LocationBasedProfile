@@ -2,9 +2,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/activate_item"
-        android:title="Activate"/>
-    <item
         android:id="@+id/modify_item"
         android:title="Modify"/>
     <item
