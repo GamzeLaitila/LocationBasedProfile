@@ -1,35 +1,16 @@
 package com.example.locationbasedprofile_;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Notification;
-import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.graphics.Color;
-import android.hardware.SensorEventListener;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-import android.media.AudioManager;
-import android.os.Build;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
-import android.provider.Settings;
-import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -37,15 +18,11 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -109,12 +86,11 @@ public class LocationService extends Service  {
     private Notification getNotification(String activeProfileName_) {
         pendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), 0);
 
-        notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Active sound profile:")
-                .setContentText(activeProfileName_ + "")
-                .setSmallIcon(R.drawable.app_icon)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setContentIntent(pendingIntent).build();
+            notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setContentTitle("Active sound profile:")
+                    .setContentText(activeProfileName_ + "")
+                    .setSmallIcon(R.drawable.app_icon)
+                    .setContentIntent(pendingIntent).build();
 
         previousProIndexForNotification = activeProfileIndex;
         previousProNameForNotification = activeProfileName;
@@ -125,6 +101,7 @@ public class LocationService extends Service  {
     // Sends notification IF there is a change in the active profile
     private void updateNotification() {
         Notification notification = getNotification(activeProfileName);
+        mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mNotificationManager.notify(1, notification);
     }
 
