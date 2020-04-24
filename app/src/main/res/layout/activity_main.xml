@@ -44,7 +44,7 @@
             android:background="@drawable/btn_background"
             android:clickable="true"
             android:gravity="center_horizontal"
-            android:paddingStart="5sp"
+            android:paddingStart="15sp"
             android:drawableLeft="@drawable/plus_white"
             android:translationZ="90dp" />
 
@@ -53,6 +53,7 @@
             android:layout_height="match_parent"
             android:gravity="center"
             android:translationZ="180dp"
+            android:paddingStart="28sp"
             android:text="Add Profile"
             android:textColor="@android:color/white"
             android:textSize="24sp"
